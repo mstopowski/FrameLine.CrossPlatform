@@ -7,8 +7,15 @@
     <Description>Description of FrameLine.Common</Description>
   </PropertyGroup>
   
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>TRACE;DEBUG;ON_RUNTIME_APPLE;NETFRAMEWORK;NET45</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType></DebugType>
+    <DefineConstants>TRACE;RELEASE;ON_RUNTIME_APPLE;NETFRAMEWORK;NET45</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="RhinoCommon" Version="6.16.19190.7001" IncludeAssets="compile;build" />
+    <PackageReference Include="RhinoCommon" Version="6.29.20238.11501" IncludeAssets="compile;build" />
   </ItemGroup>
   
 </Project>
