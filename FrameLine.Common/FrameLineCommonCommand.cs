@@ -5,14 +5,16 @@ using Rhino.Geometry;
 using Rhino.Input;
 using Rhino.Input.Custom;
 using Rhino.UI;
+#if ON_RUNTIME_APPLE
 using Eto.Drawing;
 using Eto.Forms;
+#endif
 
 namespace FrameLine.Common
 {
-    public class FrameLine.CommonCommand : Rhino.Commands.Command
+    public class FrameLineCommonCommand : Rhino.Commands.Command
   {
-    public override string EnglishName => "FrameLine.CommonCommand";
+    public override string EnglishName => "FrameLine";
 
     protected override Result RunCommand(Rhino.RhinoDoc doc, RunMode mode)
     {
