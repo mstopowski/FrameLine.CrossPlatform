@@ -7,6 +7,7 @@ using Rhino.Geometry;
 using Rhino.Input;
 using Rhino.Input.Custom;
 using Rhino.UI;
+using Rhino.Runtime;
 #if ON_RUNTIME_APPLE
 using Eto.Drawing;
 using Eto.Forms;
@@ -14,12 +15,43 @@ using Eto.Forms;
 
 namespace FrameLine.Common
 {
+    class EscapeKeyEventHandler : IDisposable
+    {
+        private bool m_escape_key_pressed;
+
+        public EscapeKeyEventHandler()
+        {
+            RhinoApp.EscapeKeyPressed += RhinoApp_EscapeKeyPressed;
+        }
+
+        public bool EscapeKeyPressed
+        {
+            get
+            {
+                RhinoApp.Wait(); // "pumps" the Rhino message queue
+                return m_escape_key_pressed;
+            }
+        }
+
+        private void RhinoApp_EscapeKeyPressed(object sender, EventArgs e)
+        {
+            m_escape_key_pressed = true;
+        }
+
+        public void Dispose()
+        {
+            RhinoApp.EscapeKeyPressed -= RhinoApp_EscapeKeyPressed;
+        }
+    }
+
     public class FrameLineCommonCommand : Rhino.Commands.Command
     {
         public override string EnglishName => "FrameLine";
 
         protected override Result RunCommand(Rhino.RhinoDoc doc, RunMode mode)
         {
+            var handler = new EscapeKeyEventHandler();
+
             // Data from user input
             int startFrame = 0;
             int endFrame = 0;
