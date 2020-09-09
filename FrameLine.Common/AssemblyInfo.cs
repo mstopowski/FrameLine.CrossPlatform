@@ -7,7 +7,7 @@ using Rhino.PlugIns;
 [assembly: PlugInDescription(DescriptionType.Address, "")]
 [assembly: PlugInDescription(DescriptionType.Country, "Poland")]
 [assembly: PlugInDescription(DescriptionType.Email, "maurycy.stopowski@gmail.com")]
-[assembly: PlugInDescription(DescriptionType.Phone, "")]
+[assembly: PlugInDescription(DescriptionType.Phone, "+48 799-775-742")]
 [assembly: PlugInDescription(DescriptionType.Organization, "")]
 [assembly: PlugInDescription(DescriptionType.UpdateUrl, "")]
 [assembly: PlugInDescription(DescriptionType.WebSite, "")]
