@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Collections;
@@ -17,7 +18,7 @@ namespace FrameLine.Common
 {
     class EscapeKeyEventHandler : IDisposable
     {
-        private bool m_escape_key_pressed;
+        bool m_escape_key_pressed = false;
 
         public EscapeKeyEventHandler()
         {
@@ -36,6 +37,7 @@ namespace FrameLine.Common
         private void RhinoApp_EscapeKeyPressed(object sender, EventArgs e)
         {
             m_escape_key_pressed = true;
+            RhinoApp.WriteLine("Escape");
         }
 
         public void Dispose()
@@ -50,41 +52,24 @@ namespace FrameLine.Common
 
         protected override Result RunCommand(Rhino.RhinoDoc doc, RunMode mode)
         {
-            var handler = new EscapeKeyEventHandler();
+            int frameHeight = 400; // Vertical lines height
+            int textHeight = 150; // Text height
 
-            // Data from user input
-            int startFrame = 0;
-            int endFrame = 0;
-            int spacing = 0;
-            bool modify = false;
+            EscapeKeyEventHandler handler = new EscapeKeyEventHandler();
 
             //List of spacings
             RhinoList<Spacing> spacings = new RhinoList<Spacing>();
 
-            // Vertical lines height
-            int frameHeight = 400;
+            var dupa = new Dupa(ref spacings);
 
-            // Text height
-            int textHeight = 150;
-
-            RhinoGet.GetInteger("Enter starting frame number", false, ref startFrame);
-            RhinoGet.GetInteger("Enter end frame number", false, ref endFrame);
-            RhinoGet.GetInteger("Enter typical spacing", false, ref spacing);
-            RhinoGet.GetBool("Do you want to insert local modification of spacing?", true, "No", "Yes", ref modify);
-
-            Spacing spaceMain = new Spacing(startFrame, endFrame, spacing);
-            spacings.Add(spaceMain);
-
-            while (modify)
+            while(!handler.EscapeKeyPressed && !dupa.zmienna)
             {
-                RhinoGet.GetInteger("Enter starting frame of modification", false, ref startFrame);
-                RhinoGet.GetInteger("Enter end frame of modification", false, ref endFrame);
-                RhinoGet.GetInteger("Enter spacing of modification", false, ref spacing);
+                dupa.AskUser();
+            }
 
-                Spacing spaceMod = new Spacing(startFrame, endFrame, spacing);
-                spacings.Add(spaceMod);
-
-                RhinoGet.GetBool("Do you want to add another local modification?", true, "No", "Yes", ref modify);
+            if(handler.EscapeKeyPressed)
+            {
+                return Result.Cancel;
             }
 
             // Create object of Class FrameLine with spacings as input
@@ -142,6 +127,46 @@ namespace FrameLine.Common
             RhinoDoc.ActiveDoc.Layers.FindIndex(indexFL).IsLocked = true;
 
             return Result.Success;
+        }
+    }
+
+    public class Dupa
+    {  
+        int startFrame = 0;
+        int endFrame = 0;
+        int spacing = 0;
+        bool modify = false;
+        public bool zmienna = false;
+
+        RhinoList<Spacing> spacingsDupa = new RhinoList<Spacing>();
+
+        public Dupa(ref RhinoList<Spacing> spacingsList)
+        {
+            this.spacingsDupa = spacingsList;
+        }
+
+        public void AskUser()
+        {
+            RhinoGet.GetInteger("Enter starting frame number", false, ref startFrame);
+            RhinoGet.GetInteger("Enter end frame number", false, ref endFrame);
+            RhinoGet.GetInteger("Enter typical spacing", false, ref spacing);
+            RhinoGet.GetBool("Do you want to insert local modification of spacing?", true, "No", "Yes", ref modify);
+
+            Spacing spaceMain = new Spacing(startFrame, endFrame, spacing);
+            spacingsDupa.Add(spaceMain);
+
+            while (modify)
+            {
+                RhinoGet.GetInteger("Enter starting frame of modification", false, ref startFrame);
+                RhinoGet.GetInteger("Enter end frame of modification", false, ref endFrame);
+                RhinoGet.GetInteger("Enter spacing of modification", false, ref spacing);
+
+                Spacing spaceMod = new Spacing(startFrame, endFrame, spacing);
+                spacingsDupa.Add(spaceMod);
+
+                RhinoGet.GetBool("Do you want to add another local modification?", true, "No", "Yes", ref modify);
+            }
+            this.zmienna = true;
         }
     }
 }
