@@ -11,15 +11,15 @@
     <DefineConstants>TRACE;DEBUG;ON_RUNTIME_WIN</DefineConstants>
   </PropertyGroup>
 	
-  <ItemGroup>
-    <Reference Include="RhinoCommon">
-      <HintPath>..\..\..\..\..\..\Program Files\Rhino 6\System\RhinoCommon.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-  </ItemGroup>
-	
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="Copy &quot;$(TargetPath)&quot; &quot;$(TargetDir)$(ProjectName).rhp&quot; &#xD;&#xA;Erase &quot;$(TargetPath)&quot;" />
   </Target>
+	
+  <ItemGroup>
+    <Reference Include="RhinoCommon">
+      <HintPath>..\..\..\..\..\..\..\Program Files\Rhino 6\System\RhinoCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
   
 </Project>
