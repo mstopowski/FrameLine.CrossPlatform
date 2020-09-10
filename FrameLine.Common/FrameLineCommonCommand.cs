@@ -19,11 +19,12 @@ namespace FrameLine.Common
 {
     class EscapeKeyEventHandler : IDisposable
     {
-        bool m_escape_key_pressed = false;
+        private bool m_escape_key_pressed = false;
 
-        public EscapeKeyEventHandler()
+        public EscapeKeyEventHandler(string message)
         {
             RhinoApp.EscapeKeyPressed += RhinoApp_EscapeKeyPressed;
+            RhinoApp.WriteLine(message);
         }
 
         public bool EscapeKeyPressed
@@ -53,14 +54,14 @@ namespace FrameLine.Common
 
         protected override Result RunCommand(Rhino.RhinoDoc doc, RunMode mode)
         {
-            EscapeKeyEventHandler handler = new EscapeKeyEventHandler();
+            EscapeKeyEventHandler handler = new EscapeKeyEventHandler("Press <Esc> to cancel");
 
             RhinoList<Spacing> spacings = new RhinoList<Spacing>(); //List of spacings
 
             UserInteract user = new UserInteract(ref spacings);
 
             user.AskUser();
-
+            
             // Create object of Class FrameLine with spacings as input
             FrameLine frameLine = new FrameLine(spacings);
 
