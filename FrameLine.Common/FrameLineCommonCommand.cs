@@ -53,12 +53,6 @@ namespace FrameLine.Common
 
         protected override Result RunCommand(Rhino.RhinoDoc doc, RunMode mode)
         {
-            // Backup of current layer
-            var layerBackUp = doc.Layers.CurrentLayer;
-
-            int frameHeight = 400; // Vertical lines height
-            int textHeight = 150; // Text height
-            
             EscapeKeyEventHandler handler = new EscapeKeyEventHandler();
 
             RhinoList<Spacing> spacings = new RhinoList<Spacing>(); //List of spacings
@@ -69,6 +63,9 @@ namespace FrameLine.Common
 
             // Create object of Class FrameLine with spacings as input
             FrameLine frameLine = new FrameLine(spacings);
+
+            // Backup of current layer
+            var layerBackUp = doc.Layers.CurrentLayer;
 
             //Creating layer for frameline
             Layer flineLayer = new Layer();
@@ -97,6 +94,32 @@ namespace FrameLine.Common
                 }
             }
 
+            int frameHeight = 400; // Vertical lines height
+
+            CreateCrossLines(doc, frameLine, groupName, frameHeight);
+
+            doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(labelLayer.Name).Index, true);
+
+            AddLabels(doc, frameLine, groupName, frameHeight);
+
+            // Adding polyline to document
+            doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(flineLayer.Name).Index, true);
+            var polyID = doc.Objects.AddPolyline(frameLine.polyPoints);
+            doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, polyID);
+
+            // Redrawing views
+            doc.Views.Redraw();
+
+            // Restoring previous layer and locking frameline layer
+            doc.Layers.SetCurrentLayerIndex(layerBackUp.Index, true);
+            doc.Layers.FindIndex(doc.Layers.FindName(labelLayer.Name).Index).IsLocked = true;
+            doc.Layers.FindIndex(doc.Layers.FindName(flineLayer.Name).Index).IsLocked = true;
+
+            return Result.Success;
+        }
+
+        void CreateCrossLines(Rhino.RhinoDoc doc, FrameLine frameLine, string groupName, int frameHeight)
+        {
             // Drawing frameline lines
             for (int i = 0; i < frameLine.polyPoints.Count; i++)
             {
@@ -107,8 +130,11 @@ namespace FrameLine.Common
                 doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, line1ID);
                 doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, line2ID);
             }
+        }
 
-            doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(labelLayer.Name).Index, true);
+        void AddLabels(Rhino.RhinoDoc doc, FrameLine frameLine, string groupName,int frameHeight)
+        {
+            int textHeight = 150; // Text height
 
             // Adding labels
             for (int i = 0; i < frameLine.polyPoints.Count; i++)
@@ -138,21 +164,6 @@ namespace FrameLine.Common
                     doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, tkstRotatedID);
                 }
             }
-
-            // Adding polyline to document
-            doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(flineLayer.Name).Index, true);
-            var polyID = doc.Objects.AddPolyline(frameLine.polyPoints);
-            doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, polyID);
-
-            // Redrawing views
-            doc.Views.Redraw();
-
-            // Restoring previous layer and locking frameline layer
-            doc.Layers.SetCurrentLayerIndex(layerBackUp.Index, true);
-            doc.Layers.FindIndex(doc.Layers.FindName(labelLayer.Name).Index).IsLocked = true;
-            doc.Layers.FindIndex(doc.Layers.FindName(flineLayer.Name).Index).IsLocked = true;
-
-            return Result.Success;
         }
     }
 }
