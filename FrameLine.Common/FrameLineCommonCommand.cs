@@ -9,6 +9,7 @@ using Rhino.Input;
 using Rhino.Input.Custom;
 using Rhino.UI;
 using Rhino.Runtime;
+using Rhino.DocObjects;
 #if ON_RUNTIME_APPLE
 using Eto.Drawing;
 using Eto.Forms;
@@ -52,48 +53,66 @@ namespace FrameLine.Common
 
         protected override Result RunCommand(Rhino.RhinoDoc doc, RunMode mode)
         {
+            // Backup of current layer
+            var layerBackUp = doc.Layers.CurrentLayer;
+
             int frameHeight = 400; // Vertical lines height
             int textHeight = 150; // Text height
-
+            
             EscapeKeyEventHandler handler = new EscapeKeyEventHandler();
 
-            //List of spacings
-            RhinoList<Spacing> spacings = new RhinoList<Spacing>();
+            RhinoList<Spacing> spacings = new RhinoList<Spacing>(); //List of spacings
 
-            var dupa = new Dupa(ref spacings);
+            UserInteract user = new UserInteract(ref spacings);
 
-            while(!handler.EscapeKeyPressed && !dupa.zmienna)
-            {
-                dupa.AskUser();
-            }
-
-            if(handler.EscapeKeyPressed)
-            {
-                return Result.Cancel;
-            }
+            user.AskUser();
 
             // Create object of Class FrameLine with spacings as input
             FrameLine frameLine = new FrameLine(spacings);
 
-            // Backup of current layer
-            Rhino.DocObjects.Layer layerBackUp = RhinoDoc.ActiveDoc.Layers.CurrentLayer;
-            int indexDef = layerBackUp.Index;
-
             //Creating layer for frameline
-            Rhino.DocObjects.Layer flineLayer = new Rhino.DocObjects.Layer
+            Layer flineLayer = new Layer();
+            flineLayer.Name = "FRAME LINE";
+            doc.Layers.Add(flineLayer);
+            doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(flineLayer.Name).Index, true);
+
+            // Creating layer for labels (child of frameline)
+            Layer labelLayer = new Layer();
+            labelLayer.Name = "LABELS";
+            labelLayer.ParentLayerId = doc.Layers.FindIndex(doc.Layers.FindName(flineLayer.Name).Index).Id;
+            doc.Layers.Add(labelLayer);
+
+            // Grupowanie
+            var groupName = "FRAME LINE GROUP";
+            if (doc.Groups.Count == 0 || doc.Groups.FindName(groupName) == null)
             {
-                Name = "Frameline"
-            };
-            int indexFL = doc.Layers.Add(flineLayer);
-            RhinoDoc.ActiveDoc.Layers.SetCurrentLayerIndex(indexFL, true);
+                doc.Groups.Add(groupName);
+            }
+            if (doc.Groups.FindName(groupName) != null)
+            {
+                var oldFrameLine = doc.Objects.FindByGroup(doc.Groups.FindName(groupName).Index);
+                foreach (var element in oldFrameLine)
+                {
+                    doc.Objects.Delete(element);
+                }
+            }
 
             // Drawing frameline & adding labels
             for (int i = 0; i < frameLine.polyPoints.Count; i++)
             {
-                doc.Objects.AddLine(new Line(new Point3d(frameLine.polyPoints[i][0], frameLine.polyPoints[i][1] - frameHeight / 2, 0),
+                var line1ID = doc.Objects.AddLine(new Line(new Point3d(frameLine.polyPoints[i][0], frameLine.polyPoints[i][1] - frameHeight / 2, 0),
                                                 new Point3d(frameLine.polyPoints[i][0], frameLine.polyPoints[i][1] + frameHeight / 2, 0)));
-                doc.Objects.AddLine(new Line(new Point3d(frameLine.polyPoints[i][0], 0, frameLine.polyPoints[i][1] - frameHeight / 2),
+                var line2ID = doc.Objects.AddLine(new Line(new Point3d(frameLine.polyPoints[i][0], 0, frameLine.polyPoints[i][1] - frameHeight / 2),
                                                 new Point3d(frameLine.polyPoints[i][0], 0, frameLine.polyPoints[i][1] + frameHeight / 2)));
+                doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, line1ID);
+                doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, line2ID);
+            }
+
+            doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(labelLayer.Name).Index, true);
+
+            // Adding labels
+            for (int i = 0; i < frameLine.polyPoints.Count; i++)
+            {
                 if (frameLine.ifLabelList[i])
                 {
                     Text3d tkst = new Text3d("Fr " + frameLine.framesList[i].ToString());
@@ -113,24 +132,31 @@ namespace FrameLine.Common
                     rotPlane.Rotate(Math.PI / 2, new Vector3d(1.0, 0.0, 0.0));
                     tkstRotated.TextPlane = rotPlane;
 
-                    doc.Objects.AddText(tkst);
-                    doc.Objects.AddText(tkstRotated);
+                    var tkstID = doc.Objects.AddText(tkst);
+                    var tkstRotatedID = doc.Objects.AddText(tkstRotated);
+                    doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, tkstID);
+                    doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, tkstRotatedID);
                 }
             }
 
             // Adding polyline to document
-            doc.Objects.AddPolyline(frameLine.polyPoints);
-            RhinoDoc.ActiveDoc.Views.Redraw();
+            doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(flineLayer.Name).Index, true);
+            var polyID = doc.Objects.AddPolyline(frameLine.polyPoints);
+            doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, polyID);
 
-            // Backing up to previous layer and locking frameline layer
-            RhinoDoc.ActiveDoc.Layers.SetCurrentLayerIndex(indexDef, true);
-            RhinoDoc.ActiveDoc.Layers.FindIndex(indexFL).IsLocked = true;
+            // Redrawing views
+            doc.Views.Redraw();
+
+            // Restoring previous layer and locking frameline layer
+            doc.Layers.SetCurrentLayerIndex(layerBackUp.Index, true);
+            doc.Layers.FindIndex(doc.Layers.FindName(labelLayer.Name).Index).IsLocked = true;
+            doc.Layers.FindIndex(doc.Layers.FindName(flineLayer.Name).Index).IsLocked = true;
 
             return Result.Success;
         }
     }
 
-    public class Dupa
+    public class UserInteract
     {  
         int startFrame = 0;
         int endFrame = 0;
@@ -138,11 +164,11 @@ namespace FrameLine.Common
         bool modify = false;
         public bool zmienna = false;
 
-        RhinoList<Spacing> spacingsDupa = new RhinoList<Spacing>();
+        RhinoList<Spacing> userSpacings = new RhinoList<Spacing>();
 
-        public Dupa(ref RhinoList<Spacing> spacingsList)
+        public UserInteract(ref RhinoList<Spacing> spacingsList)
         {
-            this.spacingsDupa = spacingsList;
+            this.userSpacings = spacingsList;
         }
 
         public void AskUser()
@@ -153,7 +179,7 @@ namespace FrameLine.Common
             RhinoGet.GetBool("Do you want to insert local modification of spacing?", true, "No", "Yes", ref modify);
 
             Spacing spaceMain = new Spacing(startFrame, endFrame, spacing);
-            spacingsDupa.Add(spaceMain);
+            userSpacings.Add(spaceMain);
 
             while (modify)
             {
@@ -162,7 +188,7 @@ namespace FrameLine.Common
                 RhinoGet.GetInteger("Enter spacing of modification", false, ref spacing);
 
                 Spacing spaceMod = new Spacing(startFrame, endFrame, spacing);
-                spacingsDupa.Add(spaceMod);
+                userSpacings.Add(spaceMod);
 
                 RhinoGet.GetBool("Do you want to add another local modification?", true, "No", "Yes", ref modify);
             }
