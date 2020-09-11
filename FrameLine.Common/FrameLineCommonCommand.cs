@@ -60,8 +60,16 @@ namespace FrameLine.Common
 
             UserInteract user = new UserInteract(ref spacings);
 
-            user.AskUser();
-            
+            while (!handler.EscapeKeyPressed)
+            {
+                user.AskUser();
+            }
+
+            if (handler.EscapeKeyPressed)
+            {
+                return Result.Cancel;
+            }
+
             // Create object of Class FrameLine with spacings as input
             FrameLine frameLine = new FrameLine(spacings);
 
