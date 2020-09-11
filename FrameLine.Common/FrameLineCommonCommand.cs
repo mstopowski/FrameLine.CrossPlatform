@@ -60,10 +60,7 @@ namespace FrameLine.Common
 
             UserInteract user = new UserInteract(ref spacings);
 
-            while (!handler.EscapeKeyPressed)
-            {
-                user.AskUser();
-            }
+            user.AskUser();
 
             if (handler.EscapeKeyPressed)
             {

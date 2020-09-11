@@ -2,6 +2,7 @@
 using Rhino;
 using Rhino.Collections;
 using Rhino.Input;
+using Rhino.Commands;
 
 namespace FrameLine.Common
 {
@@ -11,7 +12,6 @@ namespace FrameLine.Common
         int endFrame = 0;
         int spacing = 0;
         bool modify = false;
-        public bool zmienna = false;
 
         RhinoList<Spacing> userSpacings = new RhinoList<Spacing>();
 
@@ -22,26 +22,17 @@ namespace FrameLine.Common
 
         public void AskUser()
         {
-            RhinoGet.GetInteger("Enter starting frame number", false, ref startFrame);
-            RhinoGet.GetInteger("Enter end frame number", false, ref endFrame);
-            RhinoGet.GetInteger("Enter typical spacing", false, ref spacing);
-            RhinoGet.GetBool("Do you want to insert local modification of spacing?", true, "No", "Yes", ref modify);
-
-            Spacing spaceMain = new Spacing(startFrame, endFrame, spacing);
-            userSpacings.Add(spaceMain);
-
-            while (modify)
+            while (!modify)
             {
-                RhinoGet.GetInteger("Enter starting frame of modification", false, ref startFrame);
-                RhinoGet.GetInteger("Enter end frame of modification", false, ref endFrame);
-                RhinoGet.GetInteger("Enter spacing of modification", false, ref spacing);
+                if (RhinoGet.GetInteger("Enter starting frame", false, ref startFrame) == Result.Cancel) return;
+                if (RhinoGet.GetInteger("Enter end frame number", false, ref endFrame) == Result.Cancel) return;
+                if (RhinoGet.GetInteger("Enter spacing", false, ref spacing) == Result.Cancel) return;
 
-                Spacing spaceMod = new Spacing(startFrame, endFrame, spacing);
-                userSpacings.Add(spaceMod);
+                Spacing spaceMain = new Spacing(startFrame, endFrame, spacing);
+                userSpacings.Add(spaceMain);
 
-                RhinoGet.GetBool("Do you want to add another local modification?", true, "No", "Yes", ref modify);
+                if (RhinoGet.GetBool("Do you want to insert local modification?", true, "No", "Yes", ref modify) == Result.Cancel) return;
             }
-            this.zmienna = true;
         }
     }
 }
