@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Collections;
@@ -17,52 +16,17 @@ using Eto.Forms;
 
 namespace FrameLine.Common
 {
-    class EscapeKeyEventHandler : IDisposable
-    {
-        private bool m_escape_key_pressed = false;
-
-        public EscapeKeyEventHandler(string message)
-        {
-            RhinoApp.EscapeKeyPressed += RhinoApp_EscapeKeyPressed;
-            RhinoApp.WriteLine(message);
-        }
-
-        public bool EscapeKeyPressed
-        {
-            get
-            {
-                RhinoApp.Wait(); // "pumps" the Rhino message queue
-                return m_escape_key_pressed;
-            }
-        }
-
-        private void RhinoApp_EscapeKeyPressed(object sender, EventArgs e)
-        {
-            m_escape_key_pressed = true;
-            RhinoApp.WriteLine("Escape");
-        }
-
-        public void Dispose()
-        {
-            RhinoApp.EscapeKeyPressed -= RhinoApp_EscapeKeyPressed;
-        }
-    }
-
     public class FrameLineCommonCommand : Rhino.Commands.Command
     {
         public override string EnglishName => "FrameLine";
 
         protected override Result RunCommand(Rhino.RhinoDoc doc, RunMode mode)
-        {
-            EscapeKeyEventHandler handler = new EscapeKeyEventHandler("Press <Esc> to cancel");
-
+        { 
             RhinoList<Spacing> spacings = new RhinoList<Spacing>(); //List of spacings
 
             UserInteract user = new UserInteract(ref spacings);
 
-            user.AskUser();
-
-            if (handler.EscapeKeyPressed)
+            if (!user.AskUser())
             {
                 return Result.Cancel;
             }

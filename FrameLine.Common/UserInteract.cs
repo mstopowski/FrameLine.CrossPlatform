@@ -11,28 +11,34 @@ namespace FrameLine.Common
         int startFrame = 0;
         int endFrame = 0;
         int spacing = 0;
-        bool modify = false;
+        bool modify = true;
 
-        RhinoList<Spacing> userSpacings = new RhinoList<Spacing>();
+        readonly bool userPressedESC = false;
+        readonly bool userFieldForm = true;
+
+        readonly RhinoList<Spacing> userSpacings = new RhinoList<Spacing>();
 
         public UserInteract(ref RhinoList<Spacing> spacingsList)
         {
-            this.userSpacings = spacingsList;
+            userSpacings = spacingsList;
         }
 
-        public void AskUser()
+        public bool AskUser()
         {
-            while (!modify)
+            while (modify)
             {
-                if (RhinoGet.GetInteger("Enter starting frame", false, ref startFrame) == Result.Cancel) return;
-                if (RhinoGet.GetInteger("Enter end frame number", false, ref endFrame) == Result.Cancel) return;
-                if (RhinoGet.GetInteger("Enter spacing", false, ref spacing) == Result.Cancel) return;
+                modify = false;
+
+                if (RhinoGet.GetInteger("Enter starting frame", false, ref startFrame) == Result.Cancel) return userPressedESC;
+                if (RhinoGet.GetInteger("Enter end frame number", false, ref endFrame) == Result.Cancel) return userPressedESC;
+                if (RhinoGet.GetInteger("Enter spacing", false, ref spacing) == Result.Cancel) return userPressedESC;
 
                 Spacing spaceMain = new Spacing(startFrame, endFrame, spacing);
                 userSpacings.Add(spaceMain);
 
-                if (RhinoGet.GetBool("Do you want to insert local modification?", true, "No", "Yes", ref modify) == Result.Cancel) return;
+                if (RhinoGet.GetBool("Do you want to insert local modification?", true, "No", "Yes", ref modify) == Result.Cancel) return userPressedESC;
             }
+            return userFieldForm;
         }
     }
 }
