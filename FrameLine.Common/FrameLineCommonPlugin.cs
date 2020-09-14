@@ -10,17 +10,16 @@
     ///</summary>
     public class FrameLineCommonPlugin : Rhino.PlugIns.PlugIn
 	{
-    ///<summary>Gets the only instance of the FrameLine.CommonPlugin plug-in.</summary>
-    public static FrameLineCommonPlugin Instance { get; private set; }
+        ///<summary>Gets the only instance of the FrameLine.CommonPlugin plug-in.</summary>
+        public static FrameLineCommonPlugin Instance { get; private set; }
 
-    public FrameLineCommonPlugin()
-		{
-      Instance = this;
+        public FrameLineCommonPlugin()
+		    {
+                Instance = this;
+            }
 
-        }
-
-    // You can override methods here to change the plug-in behavior on
-    // loading and shut down, add options pages to the Rhino _Option command
-    // and mantain plug-in wide options in a document.
-}
+        // You can override methods here to change the plug-in behavior on
+        // loading and shut down, add options pages to the Rhino _Option command
+        // and mantain plug-in wide options in a document.
+    }
 }
