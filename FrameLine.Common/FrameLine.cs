@@ -14,13 +14,13 @@ namespace FrameLine.Common
         // Points for main line of frameline
         public RhinoList<Point3d> polyPoints = new RhinoList<Point3d>();
 
-        // Move distance in x-axis for zero to be at zero
-        int zeroMove = 0;
-
-        int tempSum = 0;
-
-        public FrameLine(RhinoList<Spacing> spacings)
+        public FrameLine(RhinoList<Spacing> spacings, double scaling)
         {
+            // Move distance in x-axis for zero to be at zero
+            int zeroMove = 0;
+
+            int tempSum = 0;
+
             for (int i = 0; i < (spacings[0].End - spacings[0].Start) + 1; i++)
             {
                 spacingList.Add(spacings[0].Space);
@@ -64,11 +64,11 @@ namespace FrameLine.Common
                 }
             }
 
-            polyPoints.Add(new Point3d(-zeroMove, 0, 0));
+            polyPoints.Add(new Point3d((double)(-(double)zeroMove/scaling), 0, 0));
 
             for (int i = 0; i < framesList.Count; i++)
             {
-                polyPoints.Add(new Point3d(spacingList[i] + tempSum - zeroMove, 0.0, 0.0));
+                polyPoints.Add(new Point3d((double)((double)(spacingList[i] + tempSum - zeroMove) / scaling), 0.0, 0.0));
                 tempSum += spacingList[i];
             }
 

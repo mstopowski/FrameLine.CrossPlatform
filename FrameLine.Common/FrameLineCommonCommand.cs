@@ -4,11 +4,9 @@ using Rhino.Commands;
 using Rhino.Collections;
 using Rhino.Display;
 using Rhino.Geometry;
-using Rhino.Input;
-using Rhino.Input.Custom;
-using Rhino.UI;
-using Rhino.Runtime;
 using Rhino.DocObjects;
+using Rhino.FileIO;
+using Rhino.DocObjects.Tables;
 #if ON_RUNTIME_APPLE
 using Eto.Drawing;
 using Eto.Forms;
@@ -21,7 +19,10 @@ namespace FrameLine.Common
         public override string EnglishName => "FrameLine";
 
         protected override Result RunCommand(Rhino.RhinoDoc doc, RunMode mode)
-        { 
+        {
+            Double dimScale = doc.DimStyles.Current.DimensionScale;
+            double scalingValue = RhinoMath.UnitScale(doc.ModelUnitSystem, UnitSystem.Millimeters);
+
             RhinoList<Spacing> spacings = new RhinoList<Spacing>(); //List of spacings
 
             UserInteract user = new UserInteract(ref spacings);
@@ -32,7 +33,7 @@ namespace FrameLine.Common
             }
 
             // Create object of Class FrameLine with spacings as input
-            FrameLine frameLine = new FrameLine(spacings);
+            FrameLine frameLine = new FrameLine(spacings, scalingValue);
 
             // Backup of current layer
             var layerBackUp = doc.Layers.CurrentLayer;
@@ -64,13 +65,13 @@ namespace FrameLine.Common
                 }
             }
 
-            int frameHeight = 400; // Vertical lines height
+            int frameHeight = 400; // Vertical lines height in mm
 
-            CreateCrossLines(doc, frameLine, groupName, frameHeight);
+            CreateCrossLines(doc, frameLine, groupName, frameHeight, scalingValue);
 
             doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(labelLayer.Name).Index, true);
 
-            AddLabels(doc, frameLine, groupName, frameHeight);
+            AddLabels(doc, frameLine, groupName, frameHeight, scalingValue, dimScale);
 
             // Adding polyline to document
             doc.Layers.SetCurrentLayerIndex(doc.Layers.FindName(flineLayer.Name).Index, true);
@@ -88,23 +89,23 @@ namespace FrameLine.Common
             return Result.Success;
         }
 
-        void CreateCrossLines(Rhino.RhinoDoc doc, FrameLine frameLine, string groupName, int frameHeight)
+        void CreateCrossLines(Rhino.RhinoDoc doc, FrameLine frameLine, string groupName, int frameHeight, double scaling)
         {
             // Drawing frameline lines
             for (int i = 0; i < frameLine.polyPoints.Count; i++)
             {
-                var line1ID = doc.Objects.AddLine(new Line(new Point3d(frameLine.polyPoints[i][0], frameLine.polyPoints[i][1] - frameHeight / 2, 0),
-                                                new Point3d(frameLine.polyPoints[i][0], frameLine.polyPoints[i][1] + frameHeight / 2, 0)));
-                var line2ID = doc.Objects.AddLine(new Line(new Point3d(frameLine.polyPoints[i][0], 0, frameLine.polyPoints[i][1] - frameHeight / 2),
-                                                new Point3d(frameLine.polyPoints[i][0], 0, frameLine.polyPoints[i][1] + frameHeight / 2)));
+                var line1ID = doc.Objects.AddLine(new Line(new Point3d(frameLine.polyPoints[i][0],frameLine.polyPoints[i][1] - (double)(frameHeight)/scaling / 2, 0),
+                                                new Point3d(frameLine.polyPoints[i][0],frameLine.polyPoints[i][1] + (double)(frameHeight) / scaling / 2, 0)));
+                var line2ID = doc.Objects.AddLine(new Line(new Point3d(frameLine.polyPoints[i][0], 0, frameLine.polyPoints[i][1] - (double)(frameHeight) / scaling / 2),
+                                                new Point3d(frameLine.polyPoints[i][0], 0, frameLine.polyPoints[i][1] + (double)(frameHeight) / scaling / 2)));
                 doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, line1ID);
                 doc.Groups.AddToGroup(doc.Groups.FindName(groupName).Index, line2ID);
             }
         }
 
-        void AddLabels(Rhino.RhinoDoc doc, FrameLine frameLine, string groupName,int frameHeight)
+        void AddLabels(Rhino.RhinoDoc doc, FrameLine frameLine, string groupName,int frameHeight, double scaling, double dimScale)
         {
-            int textHeight = 150; // Text height
+            int textHeight = 150; // Desired text height in mm
 
             // Adding labels
             for (int i = 0; i < frameLine.polyPoints.Count; i++)
@@ -114,8 +115,8 @@ namespace FrameLine.Common
                     Text3d tkst = new Text3d("Fr " + frameLine.framesList[i].ToString());
                     Text3d tkstRotated = new Text3d("Fr " + frameLine.framesList[i].ToString());
 
-                    tkst.Height = textHeight;
-                    tkstRotated.Height = textHeight;
+                    tkst.Height = (double)(textHeight / dimScale / scaling);
+                    tkstRotated.Height = (double)(textHeight / dimScale / scaling);
 
                     tkst.HorizontalAlignment = Rhino.DocObjects.TextHorizontalAlignment.Center;
                     tkst.VerticalAlignment = Rhino.DocObjects.TextVerticalAlignment.Middle;
@@ -123,8 +124,8 @@ namespace FrameLine.Common
                     tkstRotated.HorizontalAlignment = Rhino.DocObjects.TextHorizontalAlignment.Center;
                     tkstRotated.VerticalAlignment = Rhino.DocObjects.TextVerticalAlignment.Middle;
 
-                    tkst.TextPlane = new Plane(new Point3d(frameLine.polyPoints[i][0], -frameHeight, 0), new Vector3d(0.0, 0.0, 1.0));
-                    Plane rotPlane = new Plane(new Point3d(frameLine.polyPoints[i][0], 0, -frameHeight), new Vector3d(0.0, 0.0, 1.0));
+                    tkst.TextPlane = new Plane(new Point3d(frameLine.polyPoints[i][0], -(double)(frameHeight) / scaling, 0), new Vector3d(0.0, 0.0, 1.0));
+                    Plane rotPlane = new Plane(new Point3d(frameLine.polyPoints[i][0], 0, -(double)(frameHeight) / scaling), new Vector3d(0.0, 0.0, 1.0));
                     rotPlane.Rotate(Math.PI / 2, new Vector3d(1.0, 0.0, 0.0));
                     tkstRotated.TextPlane = rotPlane;
 

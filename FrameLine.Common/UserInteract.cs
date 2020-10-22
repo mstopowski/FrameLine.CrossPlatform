@@ -55,7 +55,7 @@ namespace FrameLine.Common
 
             while (!validSpac)
             {
-                if (RhinoGet.GetInteger("Enter typical spacing", false, ref spacing) == Result.Cancel) return userPressedESC;
+                if (RhinoGet.GetInteger("Enter typical spacing in milimeters [mm]", false, ref spacing) == Result.Cancel) return userPressedESC;
                 if (spacing < 0)
                 {
                     Rhino.UI.Dialogs.ShowMessage("Spacing cannot be less than zero.", "Warning");
