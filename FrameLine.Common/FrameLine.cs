@@ -64,16 +64,16 @@ namespace FrameLine.Common
                 }
             }
 
-            polyPoints.Add(new Point3d((double)(-(double)zeroMove/scaling), 0, 0));
+            polyPoints.Add(new Point3d((double)(-zeroMove / scaling), 0, 0));
 
-            for (int i = 0; i < framesList.Count; i++)
+            for (int i = 0; i < framesList.Count - 1; i++)
             {
-                polyPoints.Add(new Point3d((double)((double)(spacingList[i] + tempSum - zeroMove) / scaling), 0.0, 0.0));
+                polyPoints.Add(new Point3d((double)((spacingList[i] + tempSum - zeroMove) / scaling), 0.0, 0.0));
                 tempSum += spacingList[i];
             }
 
             // Removing last point (end+1)
-            polyPoints.RemoveAt(polyPoints.Count - 1);
+            //polyPoints.RemoveAt(polyPoints.Count - 1);
         }
     }
 }

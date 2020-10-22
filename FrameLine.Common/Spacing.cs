@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FrameLine.Common
+﻿namespace FrameLine.Common
 {
     public class Spacing
     {
@@ -10,9 +8,9 @@ namespace FrameLine.Common
         
         public Spacing(int start, int end, int space)
         {
-            this.Start = start;
-            this.End = end;
-            this.Space = space;
+            Start = start;
+            End = end;
+            Space = space;
         }
     }
 }

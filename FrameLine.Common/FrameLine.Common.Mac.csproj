@@ -15,7 +15,7 @@
     <DefineConstants>TRACE;RELEASE;ON_RUNTIME_APPLE;NETFRAMEWORK;NET45</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="RhinoCommon" Version="6.29.20238.11501" IncludeAssets="compile;build"><ExcludeAssets>runtime</ExcludeAssets>
+    <PackageReference Include="RhinoCommon" Version="6.30.20288.16411" IncludeAssets="compile;build"><ExcludeAssets>runtime</ExcludeAssets>
 </PackageReference>
   </ItemGroup>
   

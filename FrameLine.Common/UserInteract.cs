@@ -1,6 +1,4 @@
-﻿using System;
-using Rhino;
-using Rhino.Collections;
+﻿using Rhino.Collections;
 using Rhino.Input;
 using Rhino.Commands;
 
