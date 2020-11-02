@@ -6,105 +6,121 @@ namespace FrameLine.Common
 {
     public class UserInteract
     {
-        int startFrame = 0;
-        int endFrame = 0;
-        int spacing = 0;
-        bool modify = false;
+        int StartFrame = 0;
+        int EndFrame = 0;
+        int Spacing = 0;
+        int StretchStart = 0;
+        int StretchInterval = 0;
+        bool Modify = false;
+        bool Stretch = false;
 
-        readonly bool validStart = false;
-        readonly bool validEnd = false;
-        readonly bool validSpac = false;
+        readonly bool ValidStart = false;
+        readonly bool ValidEnd = false;
+        readonly bool ValidSpac = false;
 
-        readonly bool validStartMod = false;
-        readonly bool validEndMod = false;
-        readonly bool validSpacMod = false;
+        readonly bool ValidStartMod = false;
+        readonly bool ValidEndMod = false;
+        readonly bool ValidSpacMod = false;
 
-        readonly bool userPressedESC = false;
-        readonly bool userFieldForm = true;
+        readonly bool UserPressedESC = false;
+        readonly bool UserFieldForm = true;
 
-        readonly RhinoList<Spacing> userSpacings = new RhinoList<Spacing>();
+        readonly RhinoList<Spacing> UserSpacings = new RhinoList<Spacing>();
+        readonly RhinoList<Stretch> UserStretch = new RhinoList<Stretch>();
 
-        public UserInteract(ref RhinoList<Spacing> spacingsList)
+        public UserInteract(ref RhinoList<Spacing> SpacingsList, ref RhinoList<Stretch> stretches)
         {
-            userSpacings = spacingsList;
+            UserSpacings = SpacingsList;
+            UserStretch = stretches;
         }
 
         public bool AskUser()
         {
-            while (!validStart)
+            while (!ValidStart)
             {
-                if (RhinoGet.GetInteger("Enter starting frame", false, ref startFrame) == Result.Cancel) return userPressedESC;
-                if (startFrame > 0)
+                if (RhinoGet.GetInteger("Enter starting frame", false, ref StartFrame) == Result.Cancel) return UserPressedESC;
+                if (StartFrame > 0)
                 {
                     Rhino.UI.Dialogs.ShowMessage("Starting frame should be less or equal to zero.", "Warning");
                 }
                 else break;
             }
 
-            while (!validEnd)
+            while (!ValidEnd)
             {
-                if (RhinoGet.GetInteger("Enter ending frame", false, ref endFrame) == Result.Cancel) return userPressedESC;
-                if (endFrame < startFrame)
+                if (RhinoGet.GetInteger("Enter ending frame", false, ref EndFrame) == Result.Cancel) return UserPressedESC;
+                if (EndFrame < StartFrame)
                 {
                     Rhino.UI.Dialogs.ShowMessage("End frame cannot be less than start frame.", "Warning");
                 }
                 else break;
             }
 
-            while (!validSpac)
+            while (!ValidSpac)
             {
-                if (RhinoGet.GetInteger("Enter typical spacing in milimeters [mm]", false, ref spacing) == Result.Cancel) return userPressedESC;
-                if (spacing < 0)
+                if (RhinoGet.GetInteger("Enter typical Spacing in milimeters [mm]", false, ref Spacing) == Result.Cancel) return UserPressedESC;
+                if (Spacing < 0)
                 {
                     Rhino.UI.Dialogs.ShowMessage("Spacing cannot be less than zero.", "Warning");
                 }
                 else break;
             }
 
-            Spacing spaceMain = new Spacing(startFrame, endFrame, spacing);
-            userSpacings.Add(spaceMain);
+            Spacing spaceMain = new Spacing(StartFrame, EndFrame, Spacing);
+            UserSpacings.Add(spaceMain);
 
-            if (RhinoGet.GetBool("Do you want to insert local modification?", true, "No", "Yes", ref modify) == Result.Cancel) return userPressedESC;
+            if (RhinoGet.GetBool("Do you want to insert local modification?", true, "No", "Yes", ref Modify) == Result.Cancel) return UserPressedESC;
 
-            while (modify)
+            while (Modify)
             {
-                modify = false;
-                while (!validStartMod)
+                Modify = false;
+                while (!ValidStartMod)
                 {
-                    if (RhinoGet.GetInteger("Enter starting frame of modification", false, ref startFrame) == Result.Cancel) return userPressedESC;
-                    if (startFrame < spaceMain.Start || startFrame > spaceMain.End)
+                    if (RhinoGet.GetInteger("Enter starting frame of modification", false, ref StartFrame) == Result.Cancel) return UserPressedESC;
+                    if (StartFrame < spaceMain.Start || StartFrame > spaceMain.End)
                     {
                         Rhino.UI.Dialogs.ShowMessage("Start of modification cannot be outside frame line limits.", "Warning");
                     }
                     else break;
                 }
 
-                while (!validEndMod)
+                while (!ValidEndMod)
                 {
-                    if (RhinoGet.GetInteger("Enter end frame of modification", false, ref endFrame) == Result.Cancel) return userPressedESC;
-                    if (endFrame < spaceMain.Start || endFrame > spaceMain.End)
+                    if (RhinoGet.GetInteger("Enter end frame of modification", false, ref EndFrame) == Result.Cancel) return UserPressedESC;
+                    if (EndFrame < spaceMain.Start || EndFrame > spaceMain.End)
                     {
                         Rhino.UI.Dialogs.ShowMessage("End of modification cannot be outside frame line limits.", "Warning");
                     }
                     else break;
                 }
 
-                while (!validSpacMod)
+                while (!ValidSpacMod)
                 {
-                    if (RhinoGet.GetInteger("Enter spacing for modification", false, ref spacing) == Result.Cancel) return userPressedESC;
-                    if (spacing < 0)
+                    if (RhinoGet.GetInteger("Enter Spacing for modification", false, ref Spacing) == Result.Cancel) return UserPressedESC;
+                    if (Spacing < 0)
                     {
                         Rhino.UI.Dialogs.ShowMessage("Spacing cannot be less than zero.", "Warning");
                     }
                     else break;
                 }
 
-                Spacing spaceMod = new Spacing(startFrame, endFrame, spacing);
-                userSpacings.Add(spaceMod);
+                Spacing spaceMod = new Spacing(StartFrame, EndFrame, Spacing);
+                UserSpacings.Add(spaceMod);
 
-                if (RhinoGet.GetBool("Do you want to insert another local modification?", true, "No", "Yes", ref modify) == Result.Cancel) return userPressedESC;
+                if (RhinoGet.GetBool("Do you want to insert another local modification?", true, "No", "Yes", ref Modify) == Result.Cancel) return UserPressedESC;
             }
-            return userFieldForm;
+
+            if (RhinoGet.GetBool("Do you want to locally stretch frame line?", true, "No", "Yes", ref Stretch) == Result.Cancel) return UserPressedESC;
+
+            while (Stretch)
+            {
+                Stretch = false;
+                if (RhinoGet.GetInteger("Enter frame to stretch", false, ref StretchStart) == Result.Cancel) return UserPressedESC;
+                if (RhinoGet.GetInteger("Amount of frames to stretch", false, ref StretchInterval) == Result.Cancel) return UserPressedESC;
+                Stretch stretch = new Stretch(StretchStart, StretchInterval);
+                UserStretch.Add(stretch);
+            }
+            return UserFieldForm;
         }
     }
 }

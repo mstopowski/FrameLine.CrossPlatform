@@ -1,5 +1,4 @@
-﻿using Rhino;
-using Rhino.Geometry;
+﻿using Rhino.Geometry;
 using Rhino.Collections;
 
 namespace FrameLine.Common
@@ -7,24 +6,25 @@ namespace FrameLine.Common
     class FrameLine
     {
         // Lists: spacing, frame numbers, if frame to be labeled
-        public RhinoList<int> spacingList = new RhinoList<int>();
-        public RhinoList<int> framesList = new RhinoList<int>();
-        public RhinoList<bool> ifLabelList = new RhinoList<bool>();
+        public RhinoList<int> spacingList = new RhinoList<int>(); //[100,100,100,100,100]
+        public RhinoList<int> framesList = new RhinoList<int>(); //[-2, -1, 0, 1, 2]
+        public RhinoList<string> stringList = new RhinoList<string>(); //[fr -2, fr-2, fr 0, fr 1, fr 2]
+        public RhinoList<bool> ifLabelList = new RhinoList<bool>(); // [true, false, true, false, true]
 
         // Points for main line of frameline
         public RhinoList<Point3d> polyPoints = new RhinoList<Point3d>();
 
-        public FrameLine(RhinoList<Spacing> spacings, double scaling)
+        public FrameLine(RhinoList<Spacing> spacings, RhinoList<Stretch> stretches, double scaling)
         {
             // Move distance in x-axis for zero to be at zero
             int zeroMove = 0;
-
             int tempSum = 0;
-
+            
             for (int i = 0; i < (spacings[0].End - spacings[0].Start) + 1; i++)
             {
                 spacingList.Add(spacings[0].Space);
                 framesList.Add(spacings[0].Start + i);
+                stringList.Add($"{spacings[0].Start + i}");
                 if ((spacings[0].Start + i) % 5 == 0)
                 {
                     ifLabelList.Add(true);
@@ -52,6 +52,37 @@ namespace FrameLine.Common
             ifLabelList[0] = true;
             ifLabelList[ifLabelList.Count - 1] = true;
 
+            if (stretches.Count == 1)
+            {
+                var spacingInsert = spacingList[stretches[0].Start - spacings[0].Start];
+                for (int i = 0; i < stretches[0].Interval; i++)
+                {
+                    spacingList.Insert(stretches[0].Start - spacings[0].Start + 1, spacingInsert);
+                    stringList.Insert(stretches[0].Start - spacings[0].Start + 1 + i, $"E {i+1}");
+                    ifLabelList.Insert(stretches[0].Start - spacings[0].Start + 1, true);
+                    if (i == stretches[0].Interval - 1)
+                    {
+                        ifLabelList[stretches[0].Start - spacings[0].Start + stretches[0].Interval + 1] = true;
+                    }
+                }
+
+                framesList.Clear();
+                if (stretches[0].Start<0)
+                {
+                    for (int i = 0; i < (spacings[0].End - spacings[0].Start + stretches[0].Interval) + 1; i++)
+                    {
+                        framesList.Add(spacings[0].Start - stretches[0].Interval + i);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < (spacings[0].End - spacings[0].Start + stretches[0].Interval) + 1; i++)
+                    {
+                        framesList.Add(spacings[0].Start + i);
+                    }
+                }
+            }
+
             for (int i = 0; i < framesList.Count; i++)
             {
                 if (framesList[i] < 0)
@@ -71,9 +102,6 @@ namespace FrameLine.Common
                 polyPoints.Add(new Point3d((double)((spacingList[i] + tempSum - zeroMove) / scaling), 0.0, 0.0));
                 tempSum += spacingList[i];
             }
-
-            // Removing last point (end+1)
-            //polyPoints.RemoveAt(polyPoints.Count - 1);
         }
     }
 }
